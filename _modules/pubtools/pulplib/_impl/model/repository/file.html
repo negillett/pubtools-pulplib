@@ -1,17 +1,17 @@
 
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>pubtools.pulplib._impl.model.repository.file &#8212; pubtools-pulplib  documentation</title>
-    <link rel="stylesheet" href="../../../../../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
-    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../" src="../../../../../../_static/documentation_options.js"></script>
-    <script type="text/javascript" src="../../../../../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../../../../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../../../../../_static/doctools.js"></script>
-    <script type="text/javascript" src="../../../../../../_static/language_data.js"></script>
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/alabaster.css" />
+    <script data-url_root="../../../../../../" id="documentation_options" src="../../../../../../_static/documentation_options.js"></script>
+    <script src="../../../../../../_static/jquery.js"></script>
+    <script src="../../../../../../_static/underscore.js"></script>
+    <script src="../../../../../../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../search.html" />
    
@@ -31,12 +31,33 @@
           <div class="body" role="main">
             
   <h1>Source code for pubtools.pulplib._impl.model.repository.file</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="n">Repository</span><span class="p">,</span> <span class="n">repo_type</span>
-<span class="kn">from</span> <span class="nn">..attr</span> <span class="k">import</span> <span class="n">pulp_attrib</span>
-<span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">compat_attr</span> <span class="k">as</span> <span class="n">attr</span>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">validators</span>
+<span class="kn">from</span> <span class="nn">frozenlist2</span> <span class="kn">import</span> <span class="n">frozenlist</span>
+
+<span class="kn">from</span> <span class="nn">.base</span> <span class="kn">import</span> <span class="n">Repository</span><span class="p">,</span> <span class="n">SyncOptions</span><span class="p">,</span> <span class="n">repo_type</span>
+<span class="kn">from</span> <span class="nn">...model.unit</span> <span class="kn">import</span> <span class="n">FileUnit</span>
+<span class="kn">from</span> <span class="nn">..attr</span> <span class="kn">import</span> <span class="n">pulp_attrib</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">compat_attr</span> <span class="k">as</span> <span class="n">attr</span>
 
 
-<div class="viewcode-block" id="FileRepository"><a class="viewcode-back" href="../../../../../../api/model.html#pubtools.pulplib.FileRepository">[docs]</a><span class="nd">@repo_type</span><span class="p">(</span><span class="s2">&quot;iso-repo&quot;</span><span class="p">)</span>
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;pubtools.pulplib&quot;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="FileSyncOptions"><a class="viewcode-back" href="../../../../../../api/files.html#pubtools.pulplib.FileSyncOptions">[docs]</a><span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">kw_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">FileSyncOptions</span><span class="p">(</span><span class="n">SyncOptions</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Options controlling a file repository</span>
+<span class="sd">    :meth:`~pubtools.pulplib.Repository.sync`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">remove_missing</span> <span class="o">=</span> <span class="n">pulp_attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;If true, as the repository is synchronized, old files will be removed.</span>
+<span class="sd">    &quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="FileRepository"><a class="viewcode-back" href="../../../../../../api/files.html#pubtools.pulplib.FileRepository">[docs]</a><span class="nd">@repo_type</span><span class="p">(</span><span class="s2">&quot;iso-repo&quot;</span><span class="p">)</span>
 <span class="nd">@attr</span><span class="o">.</span><span class="n">s</span><span class="p">(</span><span class="n">kw_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">frozen</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">FileRepository</span><span class="p">(</span><span class="n">Repository</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A :class:`~pubtools.pulplib.Repository` for generic file distribution.&quot;&quot;&quot;</span>
@@ -50,9 +71,93 @@
             <span class="k">lambda</span> <span class="bp">self</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="s2">&quot;redhat-sigstore&quot;</span><span class="p">,</span> <span class="n">takes_self</span><span class="o">=</span><span class="kc">True</span>
         <span class="p">),</span>
         <span class="nb">type</span><span class="o">=</span><span class="nb">bool</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">bool</span><span class="p">),</span>
     <span class="p">)</span>
 
-    <span class="n">mutable_urls</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;PULP_MANIFEST&quot;</span><span class="p">]),</span> <span class="nb">type</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
+    <span class="n">mutable_urls</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">attr</span><span class="o">.</span><span class="n">Factory</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="n">frozenlist</span><span class="p">([</span><span class="s2">&quot;PULP_MANIFEST&quot;</span><span class="p">])),</span>
+        <span class="nb">type</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span>
+        <span class="n">converter</span><span class="o">=</span><span class="n">frozenlist</span><span class="p">,</span>
+    <span class="p">)</span>
+
+<div class="viewcode-block" id="FileRepository.upload_file"><a class="viewcode-back" href="../../../../../../api/files.html#pubtools.pulplib.FileRepository.upload_file">[docs]</a>    <span class="k">def</span> <span class="nf">upload_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_obj</span><span class="p">,</span> <span class="n">relative_url</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Upload a file to this repository.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            file_obj (str, file object)</span>
+<span class="sd">                If it&#39;s a string, then it&#39;s the path of a file to upload.</span>
+
+<span class="sd">                Otherwise, it should be a</span>
+<span class="sd">                `file-like object &lt;https://docs.python.org/3/glossary.html#term-file-object&gt;`_</span>
+<span class="sd">                pointing at the bytes to upload. The client takes ownership</span>
+<span class="sd">                of this file object; it should not be modified elsewhere,</span>
+<span class="sd">                and will be closed when upload completes.</span>
+
+<span class="sd">            relative_url (str)</span>
+<span class="sd">                Path that should be used in remote repository, can either</span>
+<span class="sd">                be a path to a directory or a path to a file, e.g:</span>
+
+<span class="sd">                - if relative_url is &#39;foo/bar/&#39; and file_obj has name &#39;f.txt&#39;,</span>
+<span class="sd">                  the resulting remote path wll be &#39;foo/bar/f.txt&#39;.</span>
+
+<span class="sd">                - if relative_url is &#39;foo/bar/f.txt&#39;, no matter what the</span>
+<span class="sd">                  name of file_obj is, the remote path is &#39;foo/bar/f.txt&#39;.</span>
+
+<span class="sd">                If omitted, the local name of the file will be used. Or,</span>
+<span class="sd">                if file_obj is a file object without a `name` attribute,</span>
+<span class="sd">                passing `relative_url` is mandatory.</span>
+
+<span class="sd">            kwargs</span>
+<span class="sd">                Additional field values to set on the uploaded unit.</span>
+
+<span class="sd">                Any :class:`~pubtools.pulplib.FileUnit` fields documented as</span>
+<span class="sd">                *mutable* may be included here (for example, ``cdn_path``).</span>
+<span class="sd">                An error will occur if attempting to set other fields.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Future[list of :class:`~pubtools.pulplib.Task`]</span>
+<span class="sd">                A future which is resolved after content has been imported</span>
+<span class="sd">                to this repo.</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            DetachedException</span>
+<span class="sd">                If this instance is not attached to a Pulp client.</span>
+
+<span class="sd">        .. versionadded:: 1.2.0</span>
+
+<span class="sd">        .. versionadded:: 2.20.0</span>
+<span class="sd">            Added ability to set mutable fields on upload.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">relative_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_relative_url</span><span class="p">(</span><span class="n">file_obj</span><span class="p">,</span> <span class="n">relative_url</span><span class="p">)</span>
+
+        <span class="n">unit_key_fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">upload</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">relative_url</span><span class="p">,</span>
+            <span class="s2">&quot;checksum&quot;</span><span class="p">:</span> <span class="n">upload</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="n">upload</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">}</span>
+        <span class="n">unit_metadata_fn</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">usermeta</span> <span class="o">=</span> <span class="n">FileUnit</span><span class="o">.</span><span class="n">_usermeta_from_kwargs</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">usermeta</span><span class="p">:</span>
+            <span class="n">unit_metadata_fn</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">_</span><span class="p">:</span> <span class="n">usermeta</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upload_then_import</span><span class="p">(</span>
+            <span class="n">file_obj</span><span class="p">,</span> <span class="n">relative_url</span><span class="p">,</span> <span class="s2">&quot;iso&quot;</span><span class="p">,</span> <span class="n">unit_key_fn</span><span class="p">,</span> <span class="n">unit_metadata_fn</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_get_relative_url</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_obj</span><span class="p">,</span> <span class="n">relative_url</span><span class="p">):</span>
+        <span class="n">is_file_object</span> <span class="o">=</span> <span class="s2">&quot;close&quot;</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="n">file_obj</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_file_object</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file_obj</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">relative_url</span><span class="p">:</span>
+                <span class="n">relative_url</span> <span class="o">=</span> <span class="n">name</span>
+            <span class="k">elif</span> <span class="n">relative_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">):</span>
+                <span class="n">relative_url</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">relative_url</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">is_file_object</span> <span class="ow">and</span> <span class="p">(</span><span class="ow">not</span> <span class="n">relative_url</span> <span class="ow">or</span> <span class="n">relative_url</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> is missing a name attribute and relative_url was not provided&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span> <span class="o">%</span> <span class="n">file_obj</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">relative_url</span></div>
 </pre></div>
 
           </div>
@@ -75,9 +180,16 @@
 
 
 <h3>Navigation</h3>
-<p class="caption"><span class="caption-text">Contents:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../../api-reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../api/client.html">API: client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../api/pulpcore.html">API: core</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../api/yum.html">API: yum</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../api/files.html">API: files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../api/containers.html">API: containers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../api/maintenance.html">API: maintenance</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../api/searching.html">API: searching</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../api/testing.html">API: testing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../logging.html">Logging</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../schema.html">Schemas</a></li>
 </ul>
@@ -90,7 +202,7 @@
     
     <li class="toctree-l1"><a href="https://pypi.org/project/pubtools-pulplib">PyPI</a></li>
     
-    <li class="toctree-l1"><a href="genindex.html">Index</a></li>
+    <li class="toctree-l1"><a href="https://release-engineering.github.io/pubtools-pulplib/genindex.html">Index</a></li>
     
 </ul>
 <div class="relations">
@@ -106,12 +218,12 @@
   <h3 id="searchlabel">Quick search</h3>
     <div class="searchformwrapper">
     <form class="search" action="../../../../../../search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <input type="submit" value="Go" />
     </form>
     </div>
 </div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+<script>$('#searchbox').show(0);</script>
 
 
 
@@ -128,7 +240,7 @@
       &copy;2019, Red Hat.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.1</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 4.4.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
